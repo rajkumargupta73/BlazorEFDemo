@@ -1,0 +1,46 @@
+﻿@page "/product"
+@using BlazorEFDemo.Data
+@using BlazorEFDemo.Models
+@using Microsoft.EntityFrameworkCore;
+@rendermode InteractiveServer
+@inject AppDbContext Context
+<h3>Products</h3>
+
+<input @bind="newProduct.Name" placeholder="Name" />
+<input @bind="newProduct.Price" type="number" placeholder="Price" />
+
+<button @onclick="AddProduct">
+    Add Product
+</button>
+
+<hr />
+
+@foreach (var product in products)
+{
+    <p>
+        @product.Name - @product.Price
+    </p>
+}
+
+@code {
+
+    private List<Product> products = new();
+
+    private Product newProduct = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await Context.Products.ToListAsync();
+    }
+
+    private async Task AddProduct()
+    {
+        Context.Products.Add(newProduct);
+
+        await Context.SaveChangesAsync();
+
+        products = await Context.Products.ToListAsync();
+
+        newProduct = new Product();
+    }
+}
