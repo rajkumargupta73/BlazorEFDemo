@@ -1,5 +1,7 @@
 using BlazorEFDemo.Components;
 using BlazorEFDemo.Data;
+using BlazorEFDemo.Interfaces;
+using BlazorEFDemo.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlazorEFDemo;
@@ -15,6 +17,10 @@ public class Program
             .AddInteractiveServerComponents();
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        
+        builder.Services.AddScoped<ICategoryService, CategoryService>();
+        builder.Services.AddScoped<IProductService, ProductService>();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
