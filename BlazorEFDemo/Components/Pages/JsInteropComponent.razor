@@ -1,0 +1,77 @@
+﻿@page "/jsinterop"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<h3>JsInteropComponent</h3>
+<button @onclick="ShowMessage">Show Message</button>
+
+
+<button @onclick="Calculate">
+    Calculate
+</button>
+<p>Result: @result</p>
+
+
+<button @onclick="CopyText">
+    Copy
+</button>
+
+<button @onclick="CallFromCSharp">
+    CallFromCSharp
+</button>
+
+<button @onclick="SetLocalStorage">
+    SetLocalStorage
+</button>
+
+<button @onclick="GetLocalStorage">
+    GetLocalStorage
+</button>
+<p>UserName: @userName</p>
+@code {
+    private int result = 0;
+    private string userName = "";
+    private async Task ShowMessage()
+    {
+        await JS.InvokeVoidAsync("showMessage", "Hello from Blazor function!");
+    }
+
+    private async Task Calculate()
+    {
+        result = await JS.InvokeAsync<int>(
+              "addNumbers",
+              10,
+              20);
+    }
+    private async Task CopyText()
+    {
+        await JS.InvokeVoidAsync(
+            "copyToClipboard",
+            "Hello World Raj kumar");
+    }
+
+    [JSInvokable]
+    public static string GetMessage()
+    {
+        return "Hello from C#";
+    }
+
+    private async Task CallFromCSharp()
+    {
+        await JS.InvokeVoidAsync("getMessage");
+    }
+    private async Task SetLocalStorage()
+    {
+        await JS.InvokeVoidAsync(
+        "saveData",
+        "username2",
+        "Raj2");
+    }
+    private async Task GetLocalStorage()
+    {
+        userName =
+        await JS.InvokeAsync<string>(
+            "getData",
+            "username2");
+    }
+}
