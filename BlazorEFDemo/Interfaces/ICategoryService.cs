@@ -1,15 +1,19 @@
-﻿using BlazorEFDemo.Models;
+﻿using BlazorEFDemo.Common;
+using BlazorEFDemo.DTOs;
+using BlazorEFDemo.Models;
 
 namespace BlazorEFDemo.Interfaces
 {
     public interface ICategoryService
     {
-        Task<List<Category>> GetAllAsync();
-        Task<Category?> GetByIdAsync(int id);
-        Task<Category> CreateAsync(Category category);
-        Task<Category> UpdateAsync(Category category);
-        Task<bool> DeleteAsync(int id);
-        Task<bool> ExistsAsync(string name);
+        Task<List<CategoryDto>> GetAllAsync();
+        Task<List<CategoryDto>> GetAllWithProductCountAsync();
+        Task<CategoryDto?> GetByIdAsync(int id);
+        Task<List<CategoryDto>> SearchAsync(string keyword);
+        Task<ServiceResult> CreateAsync(CreateCategoryDto dto);
+        Task<ServiceResult> UpdateAsync(UpdateCategoryDto dto);
+        Task<ServiceResult> DeleteAsync(int id);
     }
+
 
 }

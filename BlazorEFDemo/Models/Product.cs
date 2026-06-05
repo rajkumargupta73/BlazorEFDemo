@@ -16,7 +16,7 @@ namespace BlazorEFDemo.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        [Range(0.01, 999999.99, ErrorMessage = "Price must be > 0")]
+        [Range(0.01, 999999.99, ErrorMessage = "Price must be between 0.01 and 999999")]
         public decimal Price { get; set; }
 
         [Required]
@@ -24,17 +24,14 @@ namespace BlazorEFDemo.Models
         public int Stock { get; set; }
 
         public bool IsActive { get; set; } = true;
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Foreign Key
-        [Required]
+        [Required(ErrorMessage = "Category is required")]
         public int CategoryId { get; set; }
-
-        // Navigation property — Product belongs to one Category
         public Category Category { get; set; } = null!;
     }
+
 
 }
 

@@ -1,0 +1,61 @@
+﻿@* Usage: <Pagination CurrentPage="currentPage" TotalPages="totalPages"
+          OnPageChange="HandlePageChange" /> *@
+ 
+@if (TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination mb-0">
+            <li class="page-item @(CurrentPage==1?"disabled":"")">
+                <button class="page-link" @onclick="()=>Go(1)">«</button>
+            </li>
+            <li class="page-item @(CurrentPage==1?"disabled":"")">
+                <button class="page-link" @onclick="()=>Go(CurrentPage-1)">‹</button>
+            </li>
+            @foreach (var p in Pages())
+            {
+                @if (p == -1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                else
+                {
+                    <li class="page-item @(CurrentPage==p?"active":"")">
+                        <button class="page-link" @onclick="()=>Go(p)">@p</button>
+                    </li>
+                }
+            }
+            <li class="page-item @(CurrentPage==TotalPages?"disabled":"")">
+                <button class="page-link" @onclick="()=>Go(CurrentPage+1)">›</button>
+            </li>
+            <li class="page-item @(CurrentPage==TotalPages?"disabled":"")">
+                <button class="page-link" @onclick="()=>Go(TotalPages)">»</button>
+            </li>
+        </ul>
+    </nav>
+}
+ 
+@code {
+    [Parameter] public int CurrentPage  { get; set; }
+    [Parameter] public int TotalPages   { get; set; }
+    [Parameter] public EventCallback<int> OnPageChange { get; set; }
+ 
+    private async Task Go(int p)
+    {
+        if (p >= 1 && p <= TotalPages && p != CurrentPage)
+            await OnPageChange.InvokeAsync(p);
+    }
+ 
+    private List<int> Pages()
+    {
+        var list = new List<int>();
+        if (TotalPages <= 7) { for(int i=1;i<=TotalPages;i++) list.Add(i); return list; }
+        list.Add(1);
+        if (CurrentPage > 4) list.Add(-1);
+        int s = Math.Max(2, CurrentPage-2);
+        int e = Math.Min(TotalPages-1, CurrentPage+2);
+        for (int i=s; i<=e; i++) list.Add(i);
+        if (CurrentPage < TotalPages-3) list.Add(-1);
+        list.Add(TotalPages);
+        return list;
+    }
+}

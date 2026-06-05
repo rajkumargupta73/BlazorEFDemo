@@ -1,0 +1,128 @@
+﻿@page "/products/edit/{Id:int}"
+@using BlazorEFDemo.Interfaces
+@using BlazorEFDemo.DTOs
+@rendermode InteractiveServer
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject NavigationManager Nav
+
+<div class="container mt-4" style="max-width:700px">
+    <h3 class="mb-4">Edit Product</h3>
+    @if (model == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="model" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="alert alert-danger" />
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+            <div class="mb-3">
+                <label class="form-label fw-bold">Name</label>
+                <InputText class="form-control" @bind-Value="model.Name" />
+                <ValidationMessage For="() => model.Name" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Description</label>
+                <InputTextArea class="form-control" rows="3"
+                               @bind-Value="model.Description" />
+                <ValidationMessage For="() => model.Description" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Price (Rs.)</label>
+                    <InputNumber class="form-control" @bind-Value="model.Price" />
+                    <ValidationMessage For="() => model.Price" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Stock</label>
+                    <InputNumber class="form-control" @bind-Value="model.Stock" />
+                    <ValidationMessage For="() => model.Stock" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Category</label>
+                <InputSelect class="form-select" @bind-Value="model.CategoryId">
+                    <option value="0">-- Select Category --</option>
+                    @foreach (var c in categories)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => model.CategoryId" />
+            </div>
+            <div class="mb-3 form-check">
+                <InputCheckbox class="form-check-input" @bind-Value="model.IsActive" />
+                <label class="form-check-label">Active</label>
+            </div>
+            <div class="mb-4 p-3 bg-light rounded border">
+                <small class="text-muted">
+                    <strong>Created:</strong>
+                    @createdAt.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
+                    @if (updatedAt.HasValue)
+                    {
+                        <span class="ms-3">
+                            <strong>Updated:</strong>
+                            @updatedAt.Value.ToLocalTime()
+                            .ToString("dd MMM yyyy hh:mm tt")
+                        </span>
+                    }
+                </small>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success" disabled="@busy">
+                    @(busy ? "Saving..." : "Save Changes")
+                </button>
+                <a href="/products" class="btn btn-secondary">Cancel</a>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    // ✅ Plain class — not a record
+    private UpdateProductDto? model;
+    private List<CategoryDto> categories = new();
+    private DateTime createdAt;
+    private DateTime? updatedAt;
+    private string? error;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoryService.GetAllAsync();
+        var dto = await ProductService.GetByIdAsync(Id);
+        if (dto == null) { Nav.NavigateTo("/products"); return; }
+
+        createdAt = dto.CreatedAt;
+        updatedAt = dto.UpdatedAt;
+
+        // ✅ Object initializer — NOT record constructor syntax
+        model = new UpdateProductDto
+            {
+                Id = dto.Id,
+                Name = dto.Name,
+                Description = dto.Description,
+                Price = dto.Price,
+                Stock = dto.Stock,
+                CategoryId = dto.CategoryId,
+                IsActive = dto.IsActive
+            };
+    }
+
+    private async Task Submit()
+    {
+        busy = true; error = null;
+        var r = await ProductService.UpdateAsync(model!);
+        if (r.Success) Nav.NavigateTo("/products");
+        else { error = r.Message; busy = false; }
+    }
+}

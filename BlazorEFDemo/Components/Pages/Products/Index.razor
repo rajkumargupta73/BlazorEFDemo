@@ -1,0 +1,180 @@
+﻿@page "/products"
+@using BlazorEFDemo.Interfaces
+@using BlazorEFDemo.DTOs
+@using BlazorEFDemo.Services
+@rendermode InteractiveServer
+@inject IProductService  ProductService
+@inject ICategoryService CategoryService
+@inject JsInteropService JS
+ 
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage"></div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+ 
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Products <span class="badge bg-secondary">@totalCount</span></h3>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" @onclick="Export">Export CSV</button>
+            <a href="/products/create" class="btn btn-primary btn-sm">+ Add Product</a>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-@msgType alert-dismissible">
+            @message <button type="button" class="btn-close" @onclick="()=>message=null"></button>
+        </div>
+    }
+    <!-- Filters -->
+    <div class="row g-2 mb-3">
+        <div class="col-md-5">
+            <input id="searchBox" class="form-control"
+                   placeholder="Search name or description..." @oninput="OnSearch" />
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" @onchange="OnCategoryFilter">
+                <option value="0">All Categories</option>
+                @foreach (var c in categoryList)
+                { <option value="@c.Id">@c.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" @onchange="OnSizeChange">
+                <option value="5">5 per page</option>
+                <option value="10" selected>10 per page</option>
+                <option value="25">25 per page</option>
+            </select>
+        </div>
+    </div>
+    @if (rows == null)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (!rows.Any())
+    { <div class="alert alert-info">No products found.</div> }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr><th>#</th><th>Name</th><th>Category</th>
+                        <th>Price</th><th class="text-center">Stock</th>
+                        <th class="text-center">Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var p in rows)
+                {
+                    <tr>
+                        <td>@p.Id</td>
+                        <td>
+                            <span class="fw-semibold">@p.Name</span>
+                            <button class="btn btn-link btn-sm p-0 ms-1"
+                                    @onclick="()=>Copy(p.Name)">📋</button>
+                        </td>
+                        <td><span class="badge bg-secondary">@p.CategoryName</span></td>
+                        <td>Rs. @p.Price.ToString("N2")</td>
+                        <td class="text-center">
+                            <span class="badge @(p.Stock>10?"bg-success":p.Stock>0?"bg-warning text-dark":"bg-danger")">
+                                @p.Stock</span>
+                        </td>
+                        <td class="text-center">
+                            @if (p.IsActive)
+                            { <span class="badge bg-success">Active</span> }
+                            else { <span class="badge bg-secondary">Inactive</span> }
+                        </td>
+                        <td>
+                            <a href="/products/edit/@p.Id" class="btn btn-sm btn-warning me-1">Edit</a>
+                            <button class="btn btn-sm btn-danger"
+                                    @onclick="()=>Delete(p.Id,p.Name)">Delete</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted">
+                Showing @((page-1)*size+1)–@(Math.Min(page*size,totalCount)) of @totalCount
+            </small>
+            <Pagination CurrentPage="page" TotalPages="totalPages"
+                        OnPageChange="ChangePage" />
+        </div>
+    }
+</div>
+ 
+@code {
+    private List<ProductDto>?  rows;
+    private List<CategoryDto>  categoryList = new();
+    private string  keyword  = "";
+    private int     catId    = 0;
+    private string? message;
+    private string  msgType  = "success";
+    private int page=1, size=10, totalCount=0;
+    private int totalPages => (int)Math.Ceiling((double)totalCount/size);
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        categoryList = await CategoryService.GetAllAsync();
+        await Load();
+    }
+ 
+    protected override async Task OnAfterRenderAsync(bool first)
+    { if (first) await JS.FocusAsync("searchBox"); }
+ 
+    private async Task Load()
+    {
+        var r = await ProductService.GetPagedAsync(
+            page, size,
+            string.IsNullOrWhiteSpace(keyword) ? null : keyword,
+            catId > 0 ? catId : null);
+        rows       = r.Items;
+        totalCount = r.TotalCount;
+    }
+ 
+    private async Task OnSearch(ChangeEventArgs e)
+    { keyword=e.Value?.ToString()??""; page=1; await Load(); }
+ 
+    private async Task OnCategoryFilter(ChangeEventArgs e)
+    { catId=int.TryParse(e.Value?.ToString(),out int v)?v:0; page=1; await Load(); }
+ 
+    private async Task OnSizeChange(ChangeEventArgs e)
+    { size=int.TryParse(e.Value?.ToString(),out int v)?v:10; page=1; await Load(); }
+ 
+    private async Task ChangePage(int p) { page=p; await Load(); }
+ 
+    private async Task Delete(int id, string name)
+    {
+        if (!await JS.ConfirmAsync($"Delete '{name}'? Cannot be undone.")) return;
+        var r = await ProductService.DeleteAsync(id);
+        if (r.Success)
+        {
+            if (rows?.Count==1 && page>1) page--;
+            await Load();
+            await JS.ShowToastAsync($"'{name}' deleted.", "danger");
+        }
+        else { message = r.Message; msgType = "danger"; }
+    }
+ 
+    private async Task Copy(string name)
+    {
+        bool ok = await JS.CopyToClipboardAsync(name);
+        await JS.ShowToastAsync(ok ? $"Copied: {name}" : "Copy failed",
+                                 ok ? "success" : "warning");
+    }
+ 
+    private async Task Export()
+    {
+        if (rows == null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Id,Name,Category,Price,Stock,Active");
+        foreach (var p in rows)
+            sb.AppendLine($"{p.Id},{p.Name},{p.CategoryName},{p.Price},{p.Stock},{p.IsActive}");
+        await JS.DownloadCsvAsync("products.csv", sb.ToString());
+        await JS.ShowToastAsync("CSV exported!");
+    }
+}

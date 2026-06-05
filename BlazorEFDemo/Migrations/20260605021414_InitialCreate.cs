@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlazorEFDemo.Migrations
 {
     /// <inheritdoc />
-    public partial class ProductCatRelations : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,7 @@ namespace BlazorEFDemo.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
@@ -33,7 +33,7 @@ namespace BlazorEFDemo.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
@@ -59,9 +59,9 @@ namespace BlazorEFDemo.Migrations
                 columns: new[] { "Id", "Description", "Name" },
                 values: new object[,]
                 {
-                    { 1, null, "Electronics" },
-                    { 2, null, "Clothing" },
-                    { 3, null, "Food" }
+                    { 1, "Gadgets", "Electronics" },
+                    { 2, "Apparel", "Clothing" },
+                    { 3, "Groceries", "Food" }
                 });
 
             migrationBuilder.InsertData(
@@ -69,8 +69,9 @@ namespace BlazorEFDemo.Migrations
                 columns: new[] { "Id", "CategoryId", "CreatedAt", "Description", "IsActive", "Name", "Price", "Stock", "UpdatedAt" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTime(2026, 5, 27, 2, 9, 53, 686, DateTimeKind.Utc).AddTicks(1228), null, true, "Laptop", 85000m, 10, null },
-                    { 2, 2, new DateTime(2026, 5, 27, 2, 9, 53, 686, DateTimeKind.Utc).AddTicks(1231), null, true, "T-Shirt", 450m, 100, null }
+                    { 1, 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "Laptop", 85000m, 10, null },
+                    { 2, 2, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "T-Shirt", 450m, 100, null },
+                    { 3, 3, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "Rice 5kg", 600m, 200, null }
                 });
 
             migrationBuilder.CreateIndex(

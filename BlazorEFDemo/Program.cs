@@ -20,7 +20,7 @@ public class Program
         
         builder.Services.AddScoped<ICategoryService, CategoryService>();
         builder.Services.AddScoped<IProductService, ProductService>();
-
+        builder.Services.AddScoped<JsInteropService>();
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

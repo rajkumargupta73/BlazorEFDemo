@@ -1,0 +1,119 @@
+﻿@page "/categories"
+@using BlazorEFDemo.Interfaces
+@using BlazorEFDemo.DTOs
+@rendermode InteractiveServer
+@inject ICategoryService CategoryService
+ 
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage"></div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+ 
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Categories <span class="badge bg-secondary">@totalCount</span></h3>
+        <a href="/categories/create" class="btn btn-primary">+ Add Category</a>
+    </div>
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-@msgType alert-dismissible">
+            @message
+            <button type="button" class="btn-close" @onclick="()=>message=null"></button>
+        </div>
+    }
+    <input class="form-control mb-3" placeholder="Search..." @oninput="OnSearch" />
+    @if (rows == null)
+    {
+        <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (!rows.Any())
+    {
+        <div class="alert alert-info">No categories found.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr><th>#</th><th>Name</th><th>Description</th>
+                    <th class="text-center">Products</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var c in rows)
+            {
+                <tr>
+                    <td>@c.Id</td>
+                    <td class="fw-semibold">@c.Name</td>
+                    <td>@(c.Description ?? "—")</td>
+                    <td class="text-center">
+                        <span class="badge bg-info text-dark">@c.ProductCount</span>
+                    </td>
+                    <td>
+                        <a href="/categories/edit/@c.Id" class="btn btn-sm btn-warning me-1">Edit</a>
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="()=>Delete(c.Id,c.Name)"
+                                disabled="@(c.ProductCount>0)">Delete</button>
+                        @if (c.ProductCount > 0)
+                        {
+                            <small class="text-muted ms-1">Has products</small>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <small class="text-muted">
+                Showing @((page-1)*size+1)–@(Math.Min(page*size,totalCount)) of @totalCount
+            </small>
+            <Pagination CurrentPage="page" TotalPages="totalPages"
+                        OnPageChange="ChangePage" />
+        </div>
+    }
+</div>
+ 
+@code {
+    private List<CategoryDto>? rows;
+    private List<CategoryDto>  all  = new();
+    private string  keyword  = "";
+    private string? message;
+    private string  msgType  = "success";
+    private int page=1, size=8, totalCount=0;
+    private int totalPages => (int)Math.Ceiling((double)totalCount/size);
+ 
+    protected override async Task OnInitializedAsync() => await Load();
+ 
+    private async Task Load()
+    {
+        all  = await CategoryService.GetAllWithProductCountAsync();
+        Apply();
+    }
+ 
+    private void Apply()
+    {
+        var filtered = string.IsNullOrWhiteSpace(keyword) ? all
+            : all.Where(c =>
+                c.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                (c.Description?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false))
+              .ToList();
+        totalCount = filtered.Count;
+        rows = filtered.Skip((page-1)*size).Take(size).ToList();
+    }
+ 
+    private async Task OnSearch(ChangeEventArgs e)
+    { keyword = e.Value?.ToString()??""; page=1; Apply(); }
+ 
+    private void ChangePage(int p) { page=p; Apply(); }
+ 
+    private async Task Delete(int id, string name)
+    {
+        var r = await CategoryService.DeleteAsync(id);
+        message = r.Message;
+        msgType = r.Success ? "success" : "danger";
+        if (r.Success) await Load();
+    }
+}

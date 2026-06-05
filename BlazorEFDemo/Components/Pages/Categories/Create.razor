@@ -1,0 +1,54 @@
+﻿@page "/categories/create"
+@using BlazorEFDemo.Interfaces
+@using BlazorEFDemo.DTOs
+@rendermode InteractiveServer
+@inject ICategoryService CategoryService
+@inject NavigationManager Nav
+
+<div class="container mt-4" style="max-width:600px">
+    <h3 class="mb-4">Create Category</h3>
+    <EditForm Model="model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="alert alert-danger" />
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+        <div class="mb-3">
+            <label class="form-label fw-bold">
+                Name <span class="text-danger">*</span>
+            </label>
+            <InputText class="form-control" @bind-Value="model.Name"
+                       placeholder="e.g. Electronics" />
+            <ValidationMessage For="() => model.Name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Description</label>
+            <InputTextArea class="form-control" rows="3"
+                           @bind-Value="model.Description"
+                           placeholder="Optional description" />
+            <ValidationMessage For="() => model.Description" />
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success" disabled="@busy">
+                @(busy ? "Saving..." : "Create Category")
+            </button>
+            <a href="/categories" class="btn btn-secondary">Cancel</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    // ✅ Plain class new() — NOT new("", null) record syntax
+    private CreateCategoryDto model = new();
+    private string? error;
+    private bool busy;
+
+    private async Task Submit()
+    {
+        busy = true; error = null;
+        var result = await CategoryService.CreateAsync(model);
+        if (result.Success) Nav.NavigateTo("/categories");
+        else { error = result.Message; busy = false; }
+    }
+}

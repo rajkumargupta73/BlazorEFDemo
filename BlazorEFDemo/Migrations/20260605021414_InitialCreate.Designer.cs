@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlazorEFDemo.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527020954_ProductCatRelations")]
-    partial class ProductCatRelations
+    [Migration("20260605021414_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,7 +31,7 @@ namespace BlazorEFDemo.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -53,16 +53,19 @@ namespace BlazorEFDemo.Migrations
                         new
                         {
                             Id = 1,
+                            Description = "Gadgets",
                             Name = "Electronics"
                         },
                         new
                         {
                             Id = 2,
+                            Description = "Apparel",
                             Name = "Clothing"
                         },
                         new
                         {
                             Id = 3,
+                            Description = "Groceries",
                             Name = "Food"
                         });
                 });
@@ -73,7 +76,7 @@ namespace BlazorEFDemo.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
@@ -115,7 +118,7 @@ namespace BlazorEFDemo.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedAt = new DateTime(2026, 5, 27, 2, 9, 53, 686, DateTimeKind.Utc).AddTicks(1228),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Laptop",
                             Price = 85000m,
@@ -125,11 +128,21 @@ namespace BlazorEFDemo.Migrations
                         {
                             Id = 2,
                             CategoryId = 2,
-                            CreatedAt = new DateTime(2026, 5, 27, 2, 9, 53, 686, DateTimeKind.Utc).AddTicks(1231),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "T-Shirt",
                             Price = 450m,
                             Stock = 100
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsActive = true,
+                            Name = "Rice 5kg",
+                            Price = 600m,
+                            Stock = 200
                         });
                 });
 

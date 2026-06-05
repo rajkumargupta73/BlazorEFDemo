@@ -13,8 +13,8 @@ namespace BlazorEFDemo.Models
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        // Navigation property — one Category has many Products
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
+
 
 }
